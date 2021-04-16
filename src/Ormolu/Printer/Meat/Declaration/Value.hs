@@ -340,7 +340,11 @@ p_hsCmd = \case
   HsCmdCase NoExtField e mgroup ->
     p_case cmdPlacement p_hsCmd e mgroup
   HsCmdIf NoExtField _ if' then' else' ->
-    p_if cmdPlacement p_hsCmd if' then' else'
+    getPrinterOpt poOneLevelIfs >>= \case
+      True ->
+        p_if cmdThenElsePlacement p_hsCmd if' then' else'
+      False ->
+        p_if cmdPlacement p_hsCmd if' then' else'
   HsCmdLet NoExtField localBinds c ->
     p_let p_hsCmd localBinds c
   HsCmdDo NoExtField es -> do
@@ -672,7 +676,11 @@ p_hsExpr' s = \case
   HsCase NoExtField e mgroup ->
     p_case exprPlacement p_hsExpr e mgroup
   HsIf NoExtField _ if' then' else' ->
-    p_if exprPlacement p_hsExpr if' then' else'
+    getPrinterOpt poOneLevelIfs >>= \case
+      True ->
+        p_if exprThenElsePlacement p_hsExpr if' then' else'
+      False ->
+        p_if exprPlacement p_hsExpr if' then' else'
   HsMultiIf NoExtField guards -> do
     txt "if"
     breakpoint
@@ -916,17 +924,28 @@ p_if placer render if' then' else' = do
   txt "if"
   space
   located if' p_hsExpr
-  breakpoint
-  inci $ do
-    txt "then"
-    space
-    located then' $ \x ->
-      placeHanging (placer x) (render x)
-    breakpoint
-    txt "else"
-    space
-    located else' $ \x ->
-      placeHanging (placer x) (render x)
+  getPrinterOpt poOneLevelIfs >>= \case
+    True -> do
+      space
+      txt "then"
+      p_body then'
+      breakpoint
+      txt "else"
+      p_body else'
+      where
+        p_body body = placeHanging (placer $ unLoc body) $ located body render
+    False -> do
+      breakpoint
+      inci $ do
+        txt "then"
+        space
+        located then' $ \x ->
+          placeHanging (placer x) (render x)
+        breakpoint
+        txt "else"
+        space
+        located else' $ \x ->
+          placeHanging (placer x) (render x)
 
 p_let ::
   Data body =>
@@ -1222,12 +1241,25 @@ blockPlacement ::
 blockPlacement placer [L _ (GRHS NoExtField _ (L _ x))] = placer x
 blockPlacement _ _ = Normal
 
+-- | Check if given command has a hanging form for if-then-else body.
+cmdThenElsePlacement :: HsCmd GhcPs -> Placement
+cmdThenElsePlacement = \case
+  HsCmdDo NoExtField _ -> Hanging
+  _ -> Normal
+
 -- | Check if given command has a hanging form.
 cmdPlacement :: HsCmd GhcPs -> Placement
 cmdPlacement = \case
   HsCmdLam NoExtField _ -> Hanging
   HsCmdCase NoExtField _ _ -> Hanging
   HsCmdDo NoExtField _ -> Hanging
+  _ -> Normal
+
+-- | Check if given expression has a hanging form for if-then-else body.
+exprThenElsePlacement :: HsExpr GhcPs -> Placement
+exprThenElsePlacement = \case
+  HsDo NoExtField DoExpr _ -> Hanging
+  HsDo NoExtField MDoExpr _ -> Hanging
   _ -> Normal
 
 cmdTopPlacement :: HsCmdTop GhcPs -> Placement

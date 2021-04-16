@@ -25,6 +25,7 @@ spec = do
             poCommaStyle = pure Trailing,
             poIndentWheres = pure True,
             poLetNewline = pure False,
+            poOneLevelIfs = pure False,
             poRecordBraceSpace = pure True,
             poDiffFriendlyImportExport = pure False,
             poRespectful = pure False,

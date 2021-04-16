@@ -249,6 +249,14 @@ printerOptsParser = do
           "Insert a line break after 'let'"
             <> showDefaultValue poLetNewline
       ]
+  poOneLevelIfs <-
+    (optional . option parseBoundedEnum . mconcat)
+      [ long "one-level-ifs",
+        metavar "BOOL",
+        help $
+          "Indent then/else by one level (Python-style)"
+            <> showDefaultValue poOneLevelIfs
+      ]
   poRecordBraceSpace <-
     (optional . option parseBoundedEnum . mconcat)
       [ long "record-brace-space",
