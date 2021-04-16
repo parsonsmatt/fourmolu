@@ -946,8 +946,13 @@ p_let render localBinds e = sitcc $ do
       dontUseBraces $ sitcc (located localBinds p_hsLocalBinds)
   vlayout space (newline >> txt " ")
   txt "in"
-  space
-  sitcc (located e render)
+  getPrinterOpt poLetNewline >>= \case
+    True -> do
+      vlayout space newline
+      inci (located e render)
+    False -> do
+      space
+      sitcc (located e render)
 
 p_pat :: Pat GhcPs -> R ()
 p_pat = \case
