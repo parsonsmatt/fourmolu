@@ -70,6 +70,7 @@ where
 import Control.Monad
 import Data.List (intersperse)
 import Data.Text (Text)
+import GHC.Natural (naturalToInt)
 import Ormolu.Config
 import Ormolu.Printer.Comments
 import Ormolu.Printer.Internal
@@ -126,16 +127,30 @@ switchLayout ::
   -- | Computation to run with changed layout
   R () ->
   R ()
-switchLayout spans' = enterLayout (spansLayout spans')
+switchLayout spans' r = do
+  columnLimit <- getPrinterOpt poColumnLimit
+  enterLayout (spansLayout columnLimit spans') r
 
 -- | Which layout combined spans result in?
-spansLayout :: [SrcSpan] -> Layout
-spansLayout = \case
+spansLayout :: ColumnLimit -> [SrcSpan] -> Layout
+spansLayout colLimit = \case
   [] -> SingleLine
   (x : xs) ->
-    if isOneLineSpan (foldr combineSrcSpans x xs)
+    if isOneLineSpan combinedSpan && not (shouldBreakSingleLine combinedSpan)
       then SingleLine
       else MultiLine
+    where
+      combinedSpan = foldr combineSrcSpans x xs
+
+      shouldBreakSingleLine :: SrcSpan -> Bool
+      shouldBreakSingleLine (RealSrcSpan rs) =
+        case colLimit of
+          ColumnLimit maxLineLength ->
+            spanLineLength > naturalToInt maxLineLength
+          NoLimit -> False
+        where
+          spanLineLength = srcSpanEndCol rs - srcSpanStartCol rs
+      shouldBreakSingleLine _ = False
 
 -- | Insert a space if enclosing layout is single-line, or newline if it's
 -- multiline.

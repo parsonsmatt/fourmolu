@@ -23,12 +23,14 @@ module Ormolu.Config
     fillMissingPrinterOpts,
     CommaStyle (..),
     HaddockPrintStyle (..),
+    ColumnLimit (..),
     regionIndicesToDeltas,
     DynOption (..),
     dynOptionToLocatedStr,
   )
 where
 
+import Control.Applicative (Alternative (..), (<|>))
 import Data.Aeson
   ( FromJSON (..),
     camelTo2,
@@ -43,6 +45,7 @@ import Data.Functor.Identity (Identity (..))
 import Data.YAML (Pos)
 import Data.YAML.Aeson (decode1)
 import GHC.Generics (Generic)
+import GHC.Natural (Natural)
 import qualified SrcLoc as GHC
 import System.Directory
   ( XdgDirectory (XdgConfig),
@@ -120,7 +123,9 @@ data PrinterOpts f = PrinterOpts
     -- | How to print doc comments
     poHaddockStyle :: f HaddockPrintStyle,
     -- | Number of newlines between top-level decls
-    poNewlinesBetweenDecls :: f Int
+    poNewlinesBetweenDecls :: f Int,
+    -- | Max line length for automatic line breaking
+    poColumnLimit :: f ColumnLimit
   }
   deriving (Generic)
 
@@ -136,7 +141,7 @@ instance Semigroup PrinterOptsPartial where
   (<>) = fillMissingPrinterOpts
 
 instance Monoid PrinterOptsPartial where
-  mempty = PrinterOpts Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+  mempty = PrinterOpts Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 -- | A version of 'PrinterOpts' without empty fields.
 type PrinterOptsTotal = PrinterOpts Identity
@@ -155,7 +160,8 @@ defaultPrinterOpts =
       poDiffFriendlyImportExport = pure True,
       poRespectful = pure True,
       poHaddockStyle = pure HaddockMultiLine,
-      poNewlinesBetweenDecls = pure 1
+      poNewlinesBetweenDecls = pure 1,
+      poColumnLimit = pure NoLimit
     }
 
 -- | Fill the field values that are 'Nothing' in the first argument
@@ -175,7 +181,8 @@ fillMissingPrinterOpts p1 p2 =
       poDiffFriendlyImportExport = fillField poDiffFriendlyImportExport,
       poRespectful = fillField poRespectful,
       poHaddockStyle = fillField poHaddockStyle,
-      poNewlinesBetweenDecls = fillField poNewlinesBetweenDecls
+      poNewlinesBetweenDecls = fillField poNewlinesBetweenDecls,
+      poColumnLimit = fillField poColumnLimit
     }
   where
     fillField :: (forall g. PrinterOpts g -> g a) -> f a
@@ -204,6 +211,12 @@ instance FromJSON HaddockPrintStyle where
       defaultOptions
         { constructorTagModifier = drop (length "haddock-") . camelTo2 '-'
         }
+
+data ColumnLimit = ColumnLimit Natural | NoLimit
+  deriving (Eq, Ord, Show, Generic)
+
+instance FromJSON ColumnLimit where
+  parseJSON v = ColumnLimit <$> parseJSON v <|> pure NoLimit
 
 -- | Convert 'RegionIndices' into 'RegionDeltas'.
 regionIndicesToDeltas ::
