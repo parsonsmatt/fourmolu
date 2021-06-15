@@ -22,6 +22,8 @@ import Ormolu.Printer.Meat.Common
 import {-# SOURCE #-} Ormolu.Printer.Meat.Declaration.Value (p_hsSplice, p_stringLit)
 import Ormolu.Printer.Operators
 import Ormolu.Utils
+import Ormolu.Config (LeadingOrTrailing(..), poRecordHaddockLocation)
+import MonadUtils (whenM)
 
 p_hsType :: HsType GhcPs -> R ()
 p_hsType t = p_hsType' (hasDocStrings t) PipeStyle t
@@ -226,7 +228,8 @@ p_conDeclFields xs =
 
 p_conDeclField :: ConDeclField GhcPs -> R ()
 p_conDeclField ConDeclField {..} = do
-  mapM_ (p_hsDocString Pipe True) cd_fld_doc
+  whenM ((== Leading) <$> getPrinterOpt poRecordHaddockLocation) $
+    mapM_ (p_hsDocString Pipe True) cd_fld_doc
   sitcc $
     sep
       commaDel
@@ -236,6 +239,8 @@ p_conDeclField ConDeclField {..} = do
   txt "::"
   breakpoint
   sitcc . inci $ p_hsType (unLoc cd_fld_type)
+  whenM ((== Trailing) <$> getPrinterOpt poRecordHaddockLocation) $
+    mapM_ ((newline >>) . p_hsDocString Caret False) cd_fld_doc
 p_conDeclField (XConDeclField x) = noExtCon x
 
 tyOpTree :: LHsType GhcPs -> OpTree (LHsType GhcPs) (Located RdrName)

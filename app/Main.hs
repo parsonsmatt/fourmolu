@@ -229,7 +229,7 @@ printerOptsParser = do
         metavar "STYLE",
         help $
           "How to place commas in multi-line lists, records etc: "
-            <> showAllValues @CommaStyle
+            <> showAllValues @LeadingOrTrailing
             <> showDefaultValue poCommaStyle
       ]
   poIndentWheres <-
@@ -274,6 +274,15 @@ printerOptsParser = do
           "How to print Haddock comments: "
             <> showAllValues @HaddockPrintStyle
             <> showDefaultValue poHaddockStyle
+      ]
+  poRecordHaddockLocation <-
+    (optional . option parseBoundedEnum . mconcat)
+      [ long "record-haddock-location",
+        metavar "STYLE",
+        help $
+          "Where to place Haddock comments in record definitions"
+            <> showAllValues @LeadingOrTrailing
+            <> showDefaultValue poRecordHaddockLocation
       ]
   poNewlinesBetweenDecls <-
     (optional . option auto . mconcat)
@@ -326,7 +335,7 @@ instance ToCLIArgument Bool where
   toCLIArgument True = "true"
   toCLIArgument False = "false"
 
-instance ToCLIArgument CommaStyle where
+instance ToCLIArgument LeadingOrTrailing where
   toCLIArgument Leading = "leading"
   toCLIArgument Trailing = "trailing"
 

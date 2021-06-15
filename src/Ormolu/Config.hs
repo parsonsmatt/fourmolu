@@ -21,7 +21,7 @@ module Ormolu.Config
     configFileName,
     ConfigFileLoadResult (..),
     fillMissingPrinterOpts,
-    CommaStyle (..),
+    LeadingOrTrailing (..),
     HaddockPrintStyle (..),
     regionIndicesToDeltas,
     DynOption (..),
@@ -108,7 +108,7 @@ data PrinterOpts f = PrinterOpts
   { -- | Number of spaces to use for indentation
     poIndentation :: f Int,
     -- | Whether to place commas at start or end of lines
-    poCommaStyle :: f CommaStyle,
+    poCommaStyle :: f LeadingOrTrailing,
     -- | Whether to indent `where` blocks
     poIndentWheres :: f Bool,
     -- | Leave space before opening record brace
@@ -119,6 +119,8 @@ data PrinterOpts f = PrinterOpts
     poRespectful :: f Bool,
     -- | How to print doc comments
     poHaddockStyle :: f HaddockPrintStyle,
+    -- | Where to print haddocks in records
+    poRecordHaddockLocation :: f LeadingOrTrailing,
     -- | Number of newlines between top-level decls
     poNewlinesBetweenDecls :: f Int
   }
@@ -136,7 +138,7 @@ instance Semigroup PrinterOptsPartial where
   (<>) = fillMissingPrinterOpts
 
 instance Monoid PrinterOptsPartial where
-  mempty = PrinterOpts Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+  mempty = PrinterOpts Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 -- | A version of 'PrinterOpts' without empty fields.
 type PrinterOptsTotal = PrinterOpts Identity
@@ -155,6 +157,7 @@ defaultPrinterOpts =
       poDiffFriendlyImportExport = pure True,
       poRespectful = pure True,
       poHaddockStyle = pure HaddockMultiLine,
+      poRecordHaddockLocation = pure Leading,
       poNewlinesBetweenDecls = pure 1
     }
 
@@ -175,18 +178,19 @@ fillMissingPrinterOpts p1 p2 =
       poDiffFriendlyImportExport = fillField poDiffFriendlyImportExport,
       poRespectful = fillField poRespectful,
       poHaddockStyle = fillField poHaddockStyle,
+      poRecordHaddockLocation = fillField poRecordHaddockLocation,
       poNewlinesBetweenDecls = fillField poNewlinesBetweenDecls
     }
   where
     fillField :: (forall g. PrinterOpts g -> g a) -> f a
     fillField f = maybe (f p2) pure $ f p1
 
-data CommaStyle
+data LeadingOrTrailing
   = Leading
   | Trailing
   deriving (Eq, Ord, Show, Generic, Bounded, Enum)
 
-instance FromJSON CommaStyle where
+instance FromJSON LeadingOrTrailing where
   parseJSON =
     genericParseJSON
       defaultOptions
