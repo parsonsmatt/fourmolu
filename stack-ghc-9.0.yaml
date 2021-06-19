@@ -1,0 +1,9 @@
+resolver: nightly-2021-06-19
+
+extra-deps:
+  - path-0.9.0
+  - github: brandonchinn178/path-io
+    commit: 88ad648934ccc589d99a95b831c1940e6852fe0c
+
+ghc-options:
+  '$locals': -Werror
