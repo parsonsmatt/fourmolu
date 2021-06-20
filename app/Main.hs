@@ -283,6 +283,14 @@ printerOptsParser = do
           "Number of spaces between top-level declarations"
             <> showDefaultValue poNewlinesBetweenDecls
       ]
+  poLeadingArrows <-
+    (optional . option parseBoundedEnum . mconcat)
+      [ long "leading-arrows",
+        metavar "BOOL",
+        help $
+          "Whether to put arrows before or after types in type signatures"
+            <> showDefaultValue poLeadingArrows
+      ]
   pure PrinterOpts {..}
 
 ----------------------------------------------------------------------------

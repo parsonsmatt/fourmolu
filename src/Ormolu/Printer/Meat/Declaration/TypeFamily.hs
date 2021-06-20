@@ -17,6 +17,8 @@ import Ormolu.Printer.Meat.Common
 import Ormolu.Printer.Meat.Type
 import Ormolu.Utils
 
+{-# ANN module ("Hlint: ignore Use camelCase" :: String) #-}
+
 p_famDecl :: FamilyStyle -> FamilyDecl GhcPs -> R ()
 p_famDecl style FamilyDecl {fdTyVars = HsQTvs {..}, ..} = do
   mmeqs <- case fdInfo of
@@ -65,8 +67,9 @@ p_familyResultSigL l =
     L _ a -> case a of
       NoSig NoExtField -> Nothing
       KindSig NoExtField k -> Just $ do
-        txt "::"
+        trailingArrowType (pure ())
         breakpoint
+        leadingArrowType (pure ())
         located k p_hsType
       TyVarSig NoExtField bndr -> Just $ do
         equals

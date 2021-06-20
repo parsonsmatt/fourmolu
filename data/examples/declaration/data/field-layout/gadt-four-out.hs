@@ -5,7 +5,7 @@ data Foo a b where
     -- | Something
     Foo :: Foo Int Int
     -- | Something else
-    Bar ::
-        Foo
+    Bar
+        :: Foo
             Char
             Char

@@ -39,6 +39,8 @@ import Ormolu.Printer.Meat.Type
 import Ormolu.Printer.Operators
 import Ormolu.Utils
 
+{-# ANN module ("Hlint: ignore Use camelCase" :: String) #-}
+
 -- | Style of a group of equations.
 data MatchGroupStyle
   = Function (Located RdrName)
@@ -759,9 +761,9 @@ p_hsExpr' s = \case
         rupd_flds
   ExprWithTySig NoExtField x HsWC {hswc_body = HsIB {..}} -> sitcc $ do
     located x p_hsExpr
-    space
-    txt "::"
+    trailingArrowType (pure ())
     breakpoint
+    leadingArrowType (pure ())
     inci $ located hsib_body p_hsType
   ExprWithTySig NoExtField _ HsWC {hswc_body = XHsImplicitBndrs x} -> noExtCon x
   ExprWithTySig NoExtField _ (XHsWildCardBndrs x) -> noExtCon x

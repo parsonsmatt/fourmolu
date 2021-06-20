@@ -5,8 +5,8 @@ instance
         ( c -- Bar
         , d
         )
-    ) =>
-    Read
+    )
+    => Read
         ( a -- Baz
         , b
         , ( c -- Quux

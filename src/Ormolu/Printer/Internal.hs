@@ -22,6 +22,7 @@ module Ormolu.Printer.Internal
     useRecordDot,
     inci,
     inciBy,
+    inci3,
     sitcc,
     Layout (..),
     enterLayout,
@@ -404,6 +405,15 @@ inciBy x (R m) = do
   R (local modRC m)
   where
     roundDownToNearest r n = (n `div` r) * r
+
+-- | Increase indentation by 3.
+inci3 :: R () -> R ()
+inci3 (R m) = R (local modRC m)
+  where
+    modRC rc =
+      rc
+        { rcIndent = rcIndent rc + 3
+        }
 
 -- | Set indentation level for the inner computation equal to current
 -- column. This makes sure that the entire inner block is uniformly

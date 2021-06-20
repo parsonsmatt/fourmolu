@@ -20,6 +20,8 @@ import Ormolu.Printer.Meat.Common
 import Ormolu.Printer.Meat.Type
 import Ormolu.Utils
 
+{-# ANN module ("Hlint: ignore Use camelCase" :: String) #-}
+
 p_sigDecl :: Sig GhcPs -> R ()
 p_sigDecl = \case
   TypeSig NoExtField names hswc -> p_typeSig True names hswc
@@ -56,12 +58,12 @@ p_typeAscription ::
   LHsSigWcType GhcPs ->
   R ()
 p_typeAscription HsWC {..} = inci $ do
-  space
-  txt "::"
+  trailingArrowType (pure ())
   let t = hsib_body hswc_body
   if hasDocStrings (unLoc t)
     then newline
     else breakpoint
+  leadingArrowType (pure ())
   located t p_hsType
 p_typeAscription (XHsWildCardBndrs x) = noExtCon x
 
@@ -140,10 +142,10 @@ p_specSig name ts InlinePragma {..} = pragmaBraces $ do
   p_activation inl_act
   space
   p_rdrName name
-  space
-  txt "::"
-  breakpoint
-  inci $ sep commaDel (located' p_hsType . hsib_body) ts
+  trailingArrowType breakpoint
+  inci $ do
+    leadingArrowType breakpoint
+    sep commaDel (located' p_hsType . hsib_body) ts
 
 p_inlineSpec :: InlineSpec -> R ()
 p_inlineSpec = \case
@@ -209,9 +211,9 @@ p_completeSig cs' mty =
     pragma "COMPLETE" . inci $ do
       sep commaDel p_rdrName cs
       forM_ mty $ \ty -> do
-        space
-        txt "::"
+        trailingArrowType (pure ())
         breakpoint
+        leadingArrowType (pure ())
         inci (p_rdrName ty)
 
 p_sccSig :: Located (IdP GhcPs) -> Maybe (Located StringLiteral) -> R ()
@@ -227,9 +229,9 @@ p_standaloneKindSig (StandaloneKindSig NoExtField name bndrs) = do
   inci $ do
     space
     p_rdrName name
-    space
-    txt "::"
+    trailingArrowType (pure ()) -- TODO, the space in tAT wasn't here before
     breakpoint
+    leadingArrowType (pure ())
     case bndrs of
       HsIB NoExtField sig -> located sig p_hsType
       XHsImplicitBndrs x -> noExtCon x

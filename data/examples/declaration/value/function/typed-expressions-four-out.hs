@@ -1,4 +1,4 @@
 foo x = x :: Int
 bar x =
-    Just x ::
-        Maybe String
+    Just x
+    :: Maybe String

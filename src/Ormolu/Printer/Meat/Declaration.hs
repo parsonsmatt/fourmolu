@@ -35,6 +35,8 @@ import Ormolu.Printer.Meat.Declaration.Warning
 import Ormolu.Printer.Meat.Type
 import Ormolu.Utils
 
+{-# ANN module ("Hlint: ignore Use camelCase" :: String) #-}
+
 data UserGrouping
   = -- | Always put newlines where we think they should be
     Disregard

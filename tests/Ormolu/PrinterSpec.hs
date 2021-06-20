@@ -28,7 +28,8 @@ spec = do
             poDiffFriendlyImportExport = pure False,
             poRespectful = pure False,
             poHaddockStyle = pure HaddockSingleLine,
-            poNewlinesBetweenDecls = pure 1
+            poNewlinesBetweenDecls = pure 1,
+            poLeadingArrows = pure False
           }
   sequence_ $ uncurry checkExample <$> [(ormoluOpts, ""), (defaultPrinterOpts, "-four")] <*> es
 
