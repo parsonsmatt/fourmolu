@@ -369,7 +369,7 @@ mkConfig path Opts {..} = do
   filePrinterOpts <-
     loadConfigFile path >>= \case
       ConfigLoaded f po -> do
-        hPutStrLn stderr $ "Loaded config from: " <> f
+        printDebug $ "Loaded config from: " <> f
         printDebug $ show po
         return $ Just po
       ConfigParseError f (_pos, err) -> do
