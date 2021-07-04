@@ -18,7 +18,7 @@ import Test.Hspec
 
 spec :: Spec
 spec = do
-  es <- runIO locateExamples
+  defaultExamples <- runIO locateExamples
   let ormoluOpts =
         PrinterOpts
           { poIndentation = pure 2,
@@ -31,7 +31,27 @@ spec = do
             poNewlinesBetweenDecls = pure 1,
             poColumnLimit = pure NoLimit
           }
-  sequence_ $ uncurry checkExample <$> [(ormoluOpts, ""), (defaultPrinterOpts, "-four")] <*> es
+      lineBreakingExamples = map addSuffixForLineBreaking defaultExamples
+      withLineBreaking = defaultPrinterOpts {poColumnLimit = pure $ ColumnLimit 80}
+  sequence_ $
+    ( uncurry
+        checkExample
+        <$> [(ormoluOpts, ""), (defaultPrinterOpts, "-four")]
+        <*> defaultExamples
+    )
+      <> (uncurry (checkExample withLineBreaking) <$> lineBreakingExamples)
+
+addSuffixForLineBreaking :: Path Rel File -> (String, Path Rel File)
+addSuffixForLineBreaking path =
+  if any (`isSuffixOf` toFilePath path) exceptionList
+    then ("-line-break", path)
+    else ("-four", path)
+  where
+    exceptionList =
+      [ "rewrite-rule/prelude1.hs",
+        "rewrite-rule/prelude4.hs",
+        "rewrite-rule/type-signature.hs"
+      ]
 
 -- | Check a single given example.
 checkExample :: PrinterOptsTotal -> String -> Path Rel File -> Spec
