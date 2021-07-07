@@ -50,7 +50,8 @@ addSuffixForLineBreaking path =
     exceptionList =
       [ "rewrite-rule/prelude1.hs",
         "rewrite-rule/prelude4.hs",
-        "rewrite-rule/type-signature.hs"
+        "rewrite-rule/type-signature.hs",
+        "column-limit-tests.hs"
       ]
 
 -- | Check a single given example.
