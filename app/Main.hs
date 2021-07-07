@@ -241,6 +241,14 @@ printerOptsParser = do
             <> " (rather than half-indenting the 'where' keyword)"
             <> showDefaultValue poIndentWheres
       ]
+  poLetNewline <-
+    (optional . option parseBoundedEnum . mconcat)
+      [ long "let-newline",
+        metavar "BOOL",
+        help $
+          "Insert a line break after 'let'"
+            <> showDefaultValue poLetNewline
+      ]
   poRecordBraceSpace <-
     (optional . option parseBoundedEnum . mconcat)
       [ long "record-brace-space",
