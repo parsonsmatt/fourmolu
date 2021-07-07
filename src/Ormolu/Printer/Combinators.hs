@@ -27,6 +27,7 @@ module Ormolu.Printer.Combinators
     located,
     located',
     switchLayout,
+    switchLayoutNoLimit,
     Layout (..),
     vlayout,
     getLayout,
@@ -121,15 +122,27 @@ located' = flip located
 -- provided by GHC AST. It is relatively rare that this one is needed.
 --
 -- Given empty list this function will set layout to single line.
-switchLayout ::
+switchLayout' ::
+  -- | Should enforce column limit, if one is set
+  Bool ->
   -- | Span that controls layout
   [SrcSpan] ->
   -- | Computation to run with changed layout
   R () ->
   R ()
-switchLayout spans' r = do
-  columnLimit <- getPrinterOpt poColumnLimit
+switchLayout' useColLimit spans' r = do
+  columnLimit <-
+    if useColLimit then getPrinterOpt poColumnLimit else pure NoLimit
   enterLayout (spansLayout columnLimit spans') r
+
+switchLayout :: [SrcSpan] -> R () -> R ()
+switchLayout = switchLayout' True
+
+-- | Switch layout version that disregards the column limit.
+-- It should be used for the argument list in function definitions because
+-- the column limit can't be enforced there without changing the AST.
+switchLayoutNoLimit :: [SrcSpan] -> R () -> R ()
+switchLayoutNoLimit = switchLayout' False
 
 -- | Which layout combined spans result in?
 spansLayout :: ColumnLimit -> [SrcSpan] -> Layout
